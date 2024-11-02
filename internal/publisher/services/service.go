@@ -1,8 +1,7 @@
-package publisher
+package services
 
 import (
 	"fmt"
-	"github.com/MoQuayson/pub-sub-go/pkg/publisher"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/constants"
@@ -12,11 +11,10 @@ import (
 )
 
 type PublisherService struct {
-	publisher.Publisher
 	client *rpc.Client
 }
 
-func NewPublisherService(cfg *models.RpcConnConfig) publisher.Publisher {
+func NewPublisherService(cfg *models.RpcConnConfig) *PublisherService {
 	pub := &PublisherService{}
 	client, err := connectToRpcServer(cfg)
 

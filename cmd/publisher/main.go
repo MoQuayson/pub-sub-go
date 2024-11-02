@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/MoQuayson/pub-sub-go/internal/publisher"
+	"github.com/MoQuayson/pub-sub-go/pkg/publisher"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/gobuffalo/envy"
 	"log"

@@ -1,23 +1,21 @@
-package subscriber
+package services
 
 import (
 	"fmt"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/constants"
-	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
 	"log"
 	"net/rpc"
 	"time"
 )
 
 type SubscriberService struct {
-	subscriber.Subscriber
 	id     string
 	client *rpc.Client
 }
 
-func NewSubscriberService(cfg *models.RpcConnConfig) subscriber.Subscriber {
+func NewSubscriberService(cfg *models.RpcConnConfig) *SubscriberService {
 	client, err := connectToRpcServer(cfg)
 
 	if err != nil {

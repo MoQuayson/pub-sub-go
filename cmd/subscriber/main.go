@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/MoQuayson/pub-sub-go/internal/subscriber"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
 	"github.com/gobuffalo/envy"
 	"log"
 	"time"
