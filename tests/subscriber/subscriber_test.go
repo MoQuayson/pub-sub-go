@@ -1,16 +1,16 @@
 package publisher
 
 import (
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/subscriber"
-	"github.com/MoQuayson/go-event-bridge/tests/shared"
+	"github.com/MoQuayson/pub-sub-go/internal/subscriber"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/tests/shared"
 	"log"
 	"testing"
 	"time"
 )
 
 func TestSubscriberService(t *testing.T) {
-	sub := subscriber.NewSubscriber(shared.ConnectionConfig)
+	sub := subscriber.NewSubscriberService(shared.ConnectionConfig)
 
 	for {
 		messages, err := sub.GetMessages("test", models.DefaultPartition, time.Now().Add(-1))

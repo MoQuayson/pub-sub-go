@@ -2,20 +2,22 @@ package subscriber
 
 import (
 	"fmt"
-	models "github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/utils"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/utils/constants"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/constants"
+	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
 	"log"
 	"net/rpc"
 	"time"
 )
 
-type Subscriber struct {
+type SubscriberService struct {
+	subscriber.Subscriber
 	id     string
 	client *rpc.Client
 }
 
-func NewSubscriber(cfg *models.RpcConnConfig) *Subscriber {
+func NewSubscriberService(cfg *models.RpcConnConfig) subscriber.Subscriber {
 	client, err := connectToRpcServer(cfg)
 
 	if err != nil {
@@ -23,20 +25,13 @@ func NewSubscriber(cfg *models.RpcConnConfig) *Subscriber {
 		return nil
 	}
 
-	return &Subscriber{
+	return &SubscriberService{
 		client: client,
 		id:     utils.NewSubscriberId(),
 	}
 }
 
-func (s *Subscriber) GetMessages(topic string, partition models.Partition, startTime time.Time) (models.MessageList, error) {
-	//request := map[string]interface{}{
-	//	"subscriberID": subscriberID,
-	//	"topic":        topic,
-	//	"partition":    partition,
-	//	"startTime":    startTime,
-	//}
-
+func (s *SubscriberService) GetMessages(topic string, partition models.Partition, startTime time.Time) (models.MessageList, error) {
 	request := models.GetMessageRequest{
 		SubscriberId: s.id,
 		Topic:        topic,

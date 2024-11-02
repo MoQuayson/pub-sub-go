@@ -1,15 +1,15 @@
 package main
 
 import (
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/subscriber"
+	"github.com/MoQuayson/pub-sub-go/internal/subscriber"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/gobuffalo/envy"
 	"log"
 	"time"
 )
 
 func main() {
-	sub := subscriber.NewSubscriber(&models.RpcConnConfig{
+	sub := subscriber.NewSubscriberService(&models.RpcConnConfig{
 		Host: envy.Get("HOST", ""),
 		Port: envy.Get("PORT", ""),
 	})

@@ -2,20 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/publisher"
+	"github.com/MoQuayson/pub-sub-go/internal/publisher"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/gobuffalo/envy"
 	"log"
 )
 
 func main() {
-	pub := publisher.NewPublisher(&models.RpcConnConfig{
+	pub := publisher.NewPublisherService(&models.RpcConnConfig{
 		Host: envy.Get("HOST", ""),
 		Port: envy.Get("PORT", ""),
 	})
 
-	//time.Sleep(5 * time.Second)
-	//single publish
 	if err := pub.PublishMessage("test", models.DefaultPartition, "Testing Data"); err != nil {
 		log.Fatalln("failed to publish message: ", err)
 	}

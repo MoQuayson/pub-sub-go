@@ -3,9 +3,10 @@ package broker
 import (
 	"encoding/gob"
 	"fmt"
-	server "github.com/MoQuayson/go-event-bridge/internal/rpc"
-	models "github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/storage"
+	server "github.com/MoQuayson/pub-sub-go/internal/rpc"
+	"github.com/MoQuayson/pub-sub-go/pkg/broker"
+	models "github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/storage"
 	"log"
 	"net"
 	"net/rpc"
@@ -17,13 +18,8 @@ func init() {
 	gob.Register(time.Time{}) // Register time.Time for gob encoding/decoding
 }
 
-type Broker interface {
-	Start()
-	Publish(msg *models.Message, reply *string) error
-	GetMessages(request *models.GetMessageRequest, reply *models.MessageList) error
-}
-type RpcBroker struct {
-	Broker
+type BrokerService struct {
+	broker.Broker
 	config            *models.BrokerConfig
 	storage           storage.Storage
 	subscriberOffsets models.SubscriberOffsets
@@ -31,8 +27,8 @@ type RpcBroker struct {
 	server            server.Server
 }
 
-func NewRpcBroker(config *models.BrokerConfig) Broker {
-	broker := &RpcBroker{}
+func NewBrokerService(config *models.BrokerConfig) broker.Broker {
+	broker := &BrokerService{}
 	broker.config = config
 	broker.storage = getStorage(config)
 	broker.server = server.NewRpcServer()
@@ -40,14 +36,8 @@ func NewRpcBroker(config *models.BrokerConfig) Broker {
 	return broker
 }
 
-func (b *RpcBroker) Start() {
-	////register broker first
-	//if err := rpc.Register(b); err != nil {
-	//	log.Fatalf("failed to register broker on rpc: %v\n", err)
-	//}
-
+func (b *BrokerService) Start() {
 	//register broker first
-
 	if err := b.server.Register(b); err != nil {
 		log.Fatalf("failed to register broker on rpc: %v\n", err)
 	}
@@ -72,7 +62,7 @@ func (b *RpcBroker) Start() {
 }
 
 // Publish stores message in a storage
-func (b *RpcBroker) Publish(msg *models.Message, reply *string) error {
+func (b *BrokerService) Publish(msg *models.Message, reply *string) error {
 	if err := b.storage.StoreMessage(msg); err != nil {
 		return err
 	}
@@ -82,7 +72,7 @@ func (b *RpcBroker) Publish(msg *models.Message, reply *string) error {
 }
 
 // GetMessages retrieves messages for subscriber
-func (b *RpcBroker) GetMessages(request *models.GetMessageRequest, reply *models.MessageList) error {
+func (b *BrokerService) GetMessages(request *models.GetMessageRequest, reply *models.MessageList) error {
 	b.mutex.Lock()
 	if offset, exists := b.subscriberOffsets[request.SubscriberId]; exists {
 		request.Timestamp = offset.Timestamp // Start from last read timestamp

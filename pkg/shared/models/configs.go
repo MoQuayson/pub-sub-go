@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/utils/enums"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/enums"
 )
 
 type BrokerConfig struct {
