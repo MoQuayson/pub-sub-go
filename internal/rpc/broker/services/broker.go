@@ -1,10 +1,9 @@
-package broker
+package services
 
 import (
 	"encoding/gob"
 	"fmt"
 	server "github.com/MoQuayson/pub-sub-go/internal/rpc"
-	"github.com/MoQuayson/pub-sub-go/pkg/broker"
 	models "github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/storage"
 	"log"
@@ -19,7 +18,6 @@ func init() {
 }
 
 type BrokerService struct {
-	broker.Broker
 	config            *models.BrokerConfig
 	storage           storage.Storage
 	subscriberOffsets models.SubscriberOffsets
@@ -27,7 +25,7 @@ type BrokerService struct {
 	server            server.Server
 }
 
-func NewBrokerService(config *models.BrokerConfig) broker.Broker {
+func NewBrokerService(config *models.BrokerConfig) *BrokerService {
 	broker := &BrokerService{}
 	broker.config = config
 	broker.storage = getStorage(config)

@@ -1,4 +1,4 @@
-package broker
+package services
 
 import (
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
