@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	b := broker.NewBrokerService(&models.BrokerConfig{
+	b := broker.NewBroker(&models.BrokerConfig{
 		Host:    envy.Get("HOST", ""),
 		Port:    envy.Get("PORT", ""),
 		Storage: enums.StorageType_InMemory,

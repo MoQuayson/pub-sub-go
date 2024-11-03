@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	pub := publisher.NewPublisherService(&models.RpcConnConfig{
+	pub := publisher.NewPublisher(&models.BrokerConfig{
 		Host: envy.Get("HOST", ""),
 		Port: envy.Get("PORT", ""),
 	})

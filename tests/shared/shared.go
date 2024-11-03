@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ConnectionConfig = &models.RpcConnConfig{
+	ConnectionConfig = &models.BrokerConfig{
 		Host: "0.0.0.0",
 		Port: "7000",
 	}

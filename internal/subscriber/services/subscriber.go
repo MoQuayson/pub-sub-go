@@ -15,7 +15,7 @@ type SubscriberService struct {
 	client *rpc.Client
 }
 
-func NewSubscriberService(cfg *models.RpcConnConfig) *SubscriberService {
+func NewSubscriberService(cfg *models.BrokerConfig) *SubscriberService {
 	client, err := connectToRpcServer(cfg)
 
 	if err != nil {
@@ -46,9 +46,9 @@ func (s *SubscriberService) GetMessages(topic string, partition models.Partition
 	return messages, err
 }
 
-func connectToRpcServer(c *models.RpcConnConfig) (*rpc.Client, error) {
+func connectToRpcServer(c *models.BrokerConfig) (*rpc.Client, error) {
 	if c == nil {
-		*c = models.RpcConnConfig{}
+		*c = models.BrokerConfig{}
 	}
 	return rpc.Dial("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
 }

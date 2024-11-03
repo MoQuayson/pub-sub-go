@@ -11,6 +11,6 @@ type Broker interface {
 	GetMessages(request *models.GetMessageRequest, reply *models.MessageList) error
 }
 
-func NewBrokerService(config *models.BrokerConfig) Broker {
+func NewBroker(config *models.BrokerConfig) Broker {
 	return services.NewBrokerService(config)
 }

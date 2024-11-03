@@ -7,7 +7,7 @@ import (
 )
 
 func TestBrokerServer(t *testing.T) {
-	brokerSrv := broker.NewBrokerService(shared.BrokerCfg)
+	brokerSrv := broker.NewBroker(shared.BrokerCfg)
 	brokerSrv.Start()
 
 	t.Log("test done")

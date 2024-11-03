@@ -8,7 +8,7 @@ import (
 )
 
 func TestPublisherService(t *testing.T) {
-	pub := publisher.NewPublisherService(shared.ConnectionConfig)
+	pub := publisher.NewPublisher(shared.ConnectionConfig)
 
 	if err := pub.PublishMessage("test", models.DefaultPartition, "Hello world"); err != nil {
 		t.Errorf("failed to publish message: %v\n", err)

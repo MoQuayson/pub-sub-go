@@ -10,6 +10,6 @@ type Subscriber interface {
 	GetMessages(topic string, partition models.Partition, startTime time.Time) (models.MessageList, error)
 }
 
-func NewSubscriberService(cfg *models.RpcConnConfig) Subscriber {
+func NewSubscriber(cfg *models.BrokerConfig) Subscriber {
 	return services.NewSubscriberService(cfg)
 }

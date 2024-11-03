@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	sub := subscriber.NewSubscriberService(&models.RpcConnConfig{
+	sub := subscriber.NewSubscriber(&models.BrokerConfig{
 		Host: envy.Get("HOST", ""),
 		Port: envy.Get("PORT", ""),
 	})
@@ -17,7 +17,7 @@ func main() {
 	for {
 		messages, err := sub.GetMessages("test", models.DefaultPartition, time.Now().Add(-1))
 		if err != nil {
-			log.Fatalf("failed to publish message: %v\n", err)
+			log.Fatalf("failed to subscribe message: %v\n", err)
 		}
 
 		for _, message := range messages {

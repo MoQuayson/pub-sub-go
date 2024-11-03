@@ -1,8 +1,8 @@
 package publisher
 
 import (
-	"github.com/MoQuayson/pub-sub-go/internal/subscriber/services"
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
 	"github.com/MoQuayson/pub-sub-go/tests/shared"
 	"log"
 	"testing"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestSubscriberService(t *testing.T) {
-	sub := services.NewSubscriberService(shared.ConnectionConfig)
+	sub := subscriber.NewSubscriber(shared.ConnectionConfig)
 
 	for {
 		messages, err := sub.GetMessages("test", models.DefaultPartition, time.Now().Add(-1))

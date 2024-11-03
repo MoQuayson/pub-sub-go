@@ -14,7 +14,7 @@ type PublisherService struct {
 	client *rpc.Client
 }
 
-func NewPublisherService(cfg *models.RpcConnConfig) *PublisherService {
+func NewPublisherService(cfg *models.BrokerConfig) *PublisherService {
 	pub := &PublisherService{}
 	client, err := connectToRpcServer(cfg)
 
@@ -47,9 +47,9 @@ func (p *PublisherService) PublishMessage(topic string, partition models.Partiti
 
 }
 
-func connectToRpcServer(c *models.RpcConnConfig) (*rpc.Client, error) {
+func connectToRpcServer(c *models.BrokerConfig) (*rpc.Client, error) {
 	if c == nil {
-		*c = models.RpcConnConfig{}
+		*c = models.BrokerConfig{}
 	}
 	return rpc.Dial("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
 }
