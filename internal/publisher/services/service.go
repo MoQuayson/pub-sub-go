@@ -1,21 +1,21 @@
-package publisher
+package services
 
 import (
 	"fmt"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/utils"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/utils/constants"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/constants"
 	"log"
 	"net/rpc"
 	"time"
 )
 
-type Publisher struct {
+type PublisherService struct {
 	client *rpc.Client
 }
 
-func NewPublisher(cfg *models.RpcConnConfig) *Publisher {
-	pub := &Publisher{}
+func NewPublisherService(cfg *models.BrokerConfig) *PublisherService {
+	pub := &PublisherService{}
 	client, err := connectToRpcServer(cfg)
 
 	if err != nil {
@@ -28,7 +28,7 @@ func NewPublisher(cfg *models.RpcConnConfig) *Publisher {
 }
 
 // PublishMessage publishes to a topic
-func (p *Publisher) PublishMessage(topic string, partition models.Partition, data string) error {
+func (p *PublisherService) PublishMessage(topic string, partition models.Partition, data string) error {
 	msg := models.Message{
 		Id:        utils.NewMessageId(),
 		Topic:     topic,
@@ -47,9 +47,9 @@ func (p *Publisher) PublishMessage(topic string, partition models.Partition, dat
 
 }
 
-func connectToRpcServer(c *models.RpcConnConfig) (*rpc.Client, error) {
+func connectToRpcServer(c *models.BrokerConfig) (*rpc.Client, error) {
 	if c == nil {
-		*c = models.RpcConnConfig{}
+		*c = models.BrokerConfig{}
 	}
 	return rpc.Dial("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
 }

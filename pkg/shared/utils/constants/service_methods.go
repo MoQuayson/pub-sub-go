@@ -1,6 +1,6 @@
 package constants
 
 const (
-	PublishToBrokerServiceMethod       = "RpcBroker.Publish"
-	GetMessagesFromBrokerServiceMethod = "RpcBroker.GetMessages"
+	PublishToBrokerServiceMethod       = "BrokerService.Publish"
+	GetMessagesFromBrokerServiceMethod = "BrokerService.GetMessages"
 )

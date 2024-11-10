@@ -1,9 +1,9 @@
-package broker
+package services
 
 import (
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	storage2 "github.com/MoQuayson/go-event-bridge/pkg/shared/storage"
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/utils/enums"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	storage2 "github.com/MoQuayson/pub-sub-go/pkg/shared/storage"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/enums"
 )
 
 func getStorage(config *models.BrokerConfig) storage2.Storage {

@@ -1,6 +1,6 @@
-module github.com/MoQuayson/go-event-bridge
+module github.com/MoQuayson/pub-sub-go
 
-go 1.21.1
+go 1.21.6
 
 require (
 	github.com/gobuffalo/envy v1.10.2

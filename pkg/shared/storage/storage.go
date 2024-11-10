@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"time"
 )
 

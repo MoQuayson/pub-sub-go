@@ -1,2 +1,2 @@
-# go-event-bridge
+# pub-sub-go
 A Pub/Sub package 

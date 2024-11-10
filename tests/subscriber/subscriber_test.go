@@ -1,9 +1,9 @@
 package publisher
 
 import (
-	"github.com/MoQuayson/go-event-bridge/pkg/shared/models"
-	"github.com/MoQuayson/go-event-bridge/subscriber"
-	"github.com/MoQuayson/go-event-bridge/tests/shared"
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
+	"github.com/MoQuayson/pub-sub-go/tests/shared"
 	"log"
 	"testing"
 	"time"
