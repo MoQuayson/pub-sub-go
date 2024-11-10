@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/enums"
 	"time"
 )
 
@@ -34,4 +35,5 @@ type GetMessageRequest struct {
 	Topic        string
 	Partition    Partition
 	Timestamp    time.Time
+	PublishTime  enums.PublishTime
 }

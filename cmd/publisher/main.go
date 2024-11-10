@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	pub := publisher.NewPublisher(&models.BrokerConfig{
+	pub := publisher.NewPublisher(&models.PublisherConfig{
 		Host: envy.Get("HOST", ""),
 		Port: envy.Get("PORT", ""),
 	})
@@ -20,8 +20,10 @@ func main() {
 
 	//multiple publishing
 	for i := 1; i <= 9_000; i++ {
-		if err := pub.PublishMessage("test", models.DefaultPartition, fmt.Sprintf("EData %d", i)); err != nil {
+		if err := pub.PublishMessage("test", models.DefaultPartition, fmt.Sprintf("Data %d", i)); err != nil {
 			log.Fatalln("failed to publish message: ", err)
 		}
 	}
+
+	fmt.Println("published successfully")
 }

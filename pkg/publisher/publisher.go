@@ -9,6 +9,6 @@ type Publisher interface {
 	PublishMessage(topic string, partition models.Partition, data string) error
 }
 
-func NewPublisher(cfg *models.BrokerConfig) Publisher {
+func NewPublisher(cfg *models.PublisherConfig) Publisher {
 	return services.NewPublisherService(cfg)
 }

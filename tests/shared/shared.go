@@ -6,7 +6,12 @@ import (
 )
 
 var (
-	ConnectionConfig = &models.BrokerConfig{
+	PubConfig = &models.PublisherConfig{
+		Host: "0.0.0.0",
+		Port: "7000",
+	}
+
+	SubConfig = &models.SubscriberConfig{
 		Host: "0.0.0.0",
 		Port: "7000",
 	}

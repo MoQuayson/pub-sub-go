@@ -14,12 +14,12 @@ type PublisherService struct {
 	client *rpc.Client
 }
 
-func NewPublisherService(cfg *models.BrokerConfig) *PublisherService {
+func NewPublisherService(cfg *models.PublisherConfig) *PublisherService {
 	pub := &PublisherService{}
 	client, err := connectToRpcServer(cfg)
 
 	if err != nil {
-		log.Printf("failed to create a publisher: %v\n", err)
+		log.Fatalf("failed to create a publisher: %v\n", err)
 		return nil
 	}
 
@@ -47,9 +47,9 @@ func (p *PublisherService) PublishMessage(topic string, partition models.Partiti
 
 }
 
-func connectToRpcServer(c *models.BrokerConfig) (*rpc.Client, error) {
+func connectToRpcServer(c *models.PublisherConfig) (*rpc.Client, error) {
 	if c == nil {
-		*c = models.BrokerConfig{}
+		*c = models.PublisherConfig{Host: constants.DefaultHost, Port: constants.DefaultPort}
 	}
 	return rpc.Dial("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
 }

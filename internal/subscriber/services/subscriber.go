@@ -7,34 +7,40 @@ import (
 	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/constants"
 	"log"
 	"net/rpc"
-	"time"
 )
 
 type SubscriberService struct {
 	id     string
 	client *rpc.Client
+	config *models.SubscriberConfig
 }
 
-func NewSubscriberService(cfg *models.BrokerConfig) *SubscriberService {
+func NewSubscriberService(cfg *models.SubscriberConfig) *SubscriberService {
 	client, err := connectToRpcServer(cfg)
 
 	if err != nil {
-		log.Printf("failed to create a subscriber: %v\n", err)
+		log.Fatalf("failed to create subscriber: %v\n", err)
 		return nil
+	}
+
+	subId := utils.NewSubscriberId()
+	if cfg != nil && cfg.SubscriberId != nil {
+		subId = *cfg.SubscriberId
 	}
 
 	return &SubscriberService{
 		client: client,
-		id:     utils.NewSubscriberId(),
+		id:     subId,
+		config: cfg,
 	}
 }
 
-func (s *SubscriberService) GetMessages(topic string, partition models.Partition, startTime time.Time) (models.MessageList, error) {
+func (s *SubscriberService) getMessages(topic string, partition models.Partition) (models.MessageList, error) {
 	request := models.GetMessageRequest{
 		SubscriberId: s.id,
 		Topic:        topic,
 		Partition:    partition,
-		Timestamp:    startTime,
+		PublishTime:  s.config.MessagePublishTime,
 	}
 
 	var messages models.MessageList
@@ -46,9 +52,16 @@ func (s *SubscriberService) GetMessages(topic string, partition models.Partition
 	return messages, err
 }
 
-func connectToRpcServer(c *models.BrokerConfig) (*rpc.Client, error) {
+func (s *SubscriberService) Subscribe(topic string) (models.MessageList, error) {
+	return s.getMessages(topic, s.config.Partition)
+}
+
+func connectToRpcServer(c *models.SubscriberConfig) (*rpc.Client, error) {
 	if c == nil {
-		*c = models.BrokerConfig{}
+		*c = models.SubscriberConfig{
+			Host: constants.DefaultHost,
+			Port: constants.DefaultPort,
+		}
 	}
 	return rpc.Dial("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
 }
