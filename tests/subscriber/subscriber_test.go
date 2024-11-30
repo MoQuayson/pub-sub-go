@@ -1,9 +1,8 @@
 package publisher
 
 import (
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/enums"
 	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"log"
 	"testing"
 )
@@ -12,7 +11,7 @@ func TestSubscriberService(t *testing.T) {
 	sub := subscriber.NewSubscriber(&models.SubscriberConfig{
 		Host:               "0.0.0.0",
 		Port:               "7000",
-		MessagePublishTime: enums.Latest,
+		MessagePublishTime: models.LatestPublishTime,
 	})
 
 	for {

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/enums"
 	"time"
 )
 
@@ -35,5 +34,15 @@ type GetMessageRequest struct {
 	Topic        string
 	Partition    Partition
 	Timestamp    time.Time
-	PublishTime  enums.PublishTime
+	PublishTime  PublishTime
 }
+
+type PublishTime time.Duration
+
+const (
+	LatestPublishTime        PublishTime = 0
+	EarliestPublishTime      PublishTime = -1
+	WithinASecondPublishTime PublishTime = PublishTime(time.Second * -1)
+	WithinAnHourPublishTime  PublishTime = PublishTime(time.Hour * -1)
+	WithinADayPublishTime    PublishTime = PublishTime(time.Hour * -24)
+)

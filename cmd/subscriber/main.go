@@ -1,9 +1,8 @@
 package main
 
 import (
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/utils/enums"
 	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"github.com/gobuffalo/envy"
 	"log"
 )
@@ -28,8 +27,9 @@ func main() {
 	sub := subscriber.NewSubscriber(&models.SubscriberConfig{
 		Host:               envy.Get("HOST", ""),
 		Port:               envy.Get("PORT", ""),
-		MessagePublishTime: enums.WithinAnHour,
+		MessagePublishTime: models.WithinAnHourPublishTime,
 		Partition:          models.DefaultPartition,
+		Transport:          models.DefaultTransport,
 		//SubscriberId:       &subId,
 	})
 	for {

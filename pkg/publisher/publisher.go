@@ -1,8 +1,9 @@
 package publisher
 
 import (
-	"github.com/MoQuayson/pub-sub-go/internal/publisher/services"
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/internal/rpc/publisher"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
+	"log"
 )
 
 type Publisher interface {
@@ -10,5 +11,26 @@ type Publisher interface {
 }
 
 func NewPublisher(cfg *models.PublisherConfig) Publisher {
-	return services.NewPublisherService(cfg)
+
+	if cfg == nil {
+		return nil
+	}
+
+	switch cfg.Transport {
+	default:
+		return newRpcPublisher(cfg)
+	}
+}
+
+func newRpcPublisher(cfg *models.PublisherConfig) Publisher {
+	pub := &publisher.RpcPublisher{}
+	client, err := models.ConnectToRpcServer(cfg.Host, cfg.Port)
+
+	if err != nil {
+		log.Fatalf("failed to create a publisher: %v\n", err)
+		return nil
+	}
+
+	pub.Client = client
+	return pub
 }

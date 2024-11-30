@@ -2,7 +2,7 @@ package publisher
 
 import (
 	"github.com/MoQuayson/pub-sub-go/pkg/publisher"
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"testing"
 )
 

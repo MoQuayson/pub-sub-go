@@ -2,7 +2,7 @@ package storage
 
 import (
 	"container/list"
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"sync"
 	"time"
 )
