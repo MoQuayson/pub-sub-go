@@ -1,19 +1,21 @@
 package publisher
 
 import (
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
-	"github.com/MoQuayson/pub-sub-go/tests/shared"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"log"
 	"testing"
-	"time"
 )
 
 func TestSubscriberService(t *testing.T) {
-	sub := subscriber.NewSubscriber(shared.ConnectionConfig)
+	sub := subscriber.NewSubscriber(&models.SubscriberConfig{
+		Host:               "0.0.0.0",
+		Port:               "7000",
+		MessagePublishTime: models.LatestPublishTime,
+	})
 
 	for {
-		messages, err := sub.GetMessages("test", models.DefaultPartition, time.Now().Add(-1))
+		messages, err := sub.Subscribe("test")
 		if err != nil {
 			t.Errorf("failed to publish message: %v\n", err)
 		}

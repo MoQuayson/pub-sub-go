@@ -2,7 +2,7 @@ package storage
 
 import (
 	"container/list"
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"sync"
 	"time"
 )
@@ -32,7 +32,7 @@ func (s *InMemoryStorage) StoreMessage(msg *models.Message) error {
 	return nil
 }
 
-func (s *InMemoryStorage) GetMessages(topic string, partition models.Partition) ([]*models.Message, error) {
+func (s *InMemoryStorage) GetMessages(topic string, partition models.Partition) (models.MessageList, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 

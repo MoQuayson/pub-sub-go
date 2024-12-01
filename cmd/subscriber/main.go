@@ -1,21 +1,39 @@
 package main
 
 import (
-	"github.com/MoQuayson/pub-sub-go/pkg/shared/models"
 	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"github.com/gobuffalo/envy"
 	"log"
-	"time"
 )
 
 func main() {
-	sub := subscriber.NewSubscriber(&models.BrokerConfig{
-		Host: envy.Get("HOST", ""),
-		Port: envy.Get("PORT", ""),
-	})
+	//sub := subscriber.NewSubscriber(&models.SubscriberConfig{
+	//	Host:               envy.Get("HOST", ""),
+	//	Port:               envy.Get("PORT", ""),
+	//	MessagePublishTime: enums.PublishTime_Latest,
+	//	Partition:          models.DefaultPartition,
+	//})
 
+	//subId := "SUB1234"
+	//sub := subscriber.NewSubscriber(&models.SubscriberConfig{
+	//	Host:               envy.Get("HOST", ""),
+	//	Port:               envy.Get("PORT", ""),
+	//	MessagePublishTime: enums.PublishTime_Earliest,
+	//	Partition:          models.DefaultPartition,
+	//	SubscriberId:       &subId,
+	//})
+
+	sub := subscriber.NewSubscriber(&models.SubscriberConfig{
+		Host:               envy.Get("HOST", ""),
+		Port:               envy.Get("PORT", ""),
+		MessagePublishTime: models.WithinAnHourPublishTime,
+		Partition:          models.DefaultPartition,
+		Transport:          models.DefaultTransport,
+		//SubscriberId:       &subId,
+	})
 	for {
-		messages, err := sub.GetMessages("test", models.DefaultPartition, time.Now().Add(-1))
+		messages, err := sub.Subscribe("test")
 		if err != nil {
 			log.Fatalf("failed to subscribe message: %v\n", err)
 		}

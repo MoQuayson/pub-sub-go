@@ -34,4 +34,15 @@ type GetMessageRequest struct {
 	Topic        string
 	Partition    Partition
 	Timestamp    time.Time
+	PublishTime  PublishTime
 }
+
+type PublishTime time.Duration
+
+const (
+	LatestPublishTime        PublishTime = 0
+	EarliestPublishTime      PublishTime = -1
+	WithinASecondPublishTime PublishTime = PublishTime(time.Second * -1)
+	WithinAnHourPublishTime  PublishTime = PublishTime(time.Hour * -1)
+	WithinADayPublishTime    PublishTime = PublishTime(time.Hour * -24)
+)
