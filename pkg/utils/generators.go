@@ -16,6 +16,10 @@ func NewMessageId() string {
 	return fmt.Sprintf("MSG%s", strings.ToUpper(strings.Replace(NewUUID().String(), "-", "", -1)))
 }
 
+func NewPublisherId() string {
+	return fmt.Sprintf("PUB%s", strings.ToUpper(strings.Replace(NewUUID().String(), "-", "", -1)))
+}
+
 func NewSubscriberId() string {
 	return fmt.Sprintf("SUB%s", strings.ToUpper(strings.Replace(NewUUID().String(), "-", "", -1)))
 }

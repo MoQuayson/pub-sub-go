@@ -13,7 +13,10 @@ func TestBrokerServer(t *testing.T) {
 		Storage:   models.InMemoryStorageType,
 		Transport: models.DefaultTransport,
 	})
-	brokerSrv.Start()
+
+	if err := brokerSrv.Start(); err != nil {
+		t.Error(err)
+	}
 
 	t.Log("test done")
 }

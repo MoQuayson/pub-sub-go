@@ -1,78 +1,76 @@
-package broker
+package grpc
 
 import (
 	"fmt"
+	"github.com/MoQuayson/pub-sub-go/internal/broker"
+	pb "github.com/MoQuayson/pub-sub-go/pkg/proto_gen/github.com/moquayson/pub-sub-go"
 	"github.com/MoQuayson/pub-sub-go/pkg/storage"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	linq "github.com/samber/lo"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
-	"net/rpc"
 	"sort"
 	"sync"
 	"time"
 )
 
-type RpcBroker struct {
+type BrokerGrpcServer struct {
 	Config            *models.BrokerConfig
 	Storage           storage.Storage
 	SubscriberOffsets models.SubscriberOffsets
 	Mutex             sync.Mutex
-	//server            server.Server
+	Server            *Server
 }
 
-func (b *RpcBroker) Start() {
-	//register broker first
-	if err := b.Register(b); err != nil {
-		log.Fatalf("failed to register broker on rpc: %v\n", err)
-	}
-
-	//run on tcp
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", b.Config.Host, b.Config.Port))
+func (b *BrokerGrpcServer) Start() error {
+	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", b.Config.Host, b.Config.Port))
 	if err != nil {
-		log.Println("failed to start broker:", err)
-		return
+		log.Fatalf("Failed to listen: %v", err)
 	}
-	defer listener.Close()
-	log.Printf("Broker is running on %s:%s", b.Config.Host, b.Config.Port)
 
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			fmt.Println("Connection error:", err)
-			continue
-		}
-		go rpc.ServeConn(conn)
-	}
-}
-
-// Publish stores message in a storage
-func (b *RpcBroker) Publish(msg *models.Message, reply *string) error {
-	if err := b.Storage.StoreMessage(msg); err != nil {
+	grpcServer := grpc.NewServer()
+	pb.RegisterBrokerServer(grpcServer, b.Server)
+	b.Server.broker = b
+	// enable reflection
+	reflection.Register(grpcServer)
+	log.Printf("broker is running on %s:%s\n", b.Config.Host, b.Config.Port)
+	if err = grpcServer.Serve(lis); err != nil {
+		log.Printf("failed to serve: %v\n", err)
 		return err
 	}
 
-	*reply = fmt.Sprintf("message (%s) published successfully", msg.Id)
 	return nil
 }
 
-// GetMessages retrieves messages for subscriber
-func (b *RpcBroker) GetMessages(request *models.GetMessageRequest, reply *models.MessageList) error {
-	var err error
-	switch request.PublishTime {
+// PublishMessage publishes a message to a topic
+func (b *BrokerGrpcServer) PublishMessage(msg *models.Message) error {
+	if err := b.Storage.StoreMessage(msg); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b *BrokerGrpcServer) GetMessages(req *models.GetMessageRequest) ([]*models.Message, error) {
+	messages, err := b.Storage.GetMessages(req.Topic, req.Partition)
+	if err != nil {
+		log.Printf("failed to get messages: %v\n", err)
+		return nil, err
+	}
+	switch req.PublishTime {
 	case models.LatestPublishTime:
-		*reply, err = b.getLatestMessages(request)
-		return err
+		return broker.GetLatestMessages(&b.Mutex, b.SubscriberOffsets, messages, req)
 	case models.EarliestPublishTime:
-		*reply, err = b.getEarliestMessages(request)
-		return err
+		//return b.getEarliestMessages(req)
+		return broker.GetEarliestMessages(&b.Mutex, b.SubscriberOffsets, messages, req)
 	default:
-		*reply, err = b.getMessages(request, time.Duration(request.PublishTime))
-		return err
+		//return b.getMessages(req, time.Duration(req.PublishTime))
+		return broker.GetMessages(&b.Mutex, b.SubscriberOffsets, messages, req, time.Duration(req.PublishTime))
 	}
 }
 
-func (b *RpcBroker) getEarliestMessages(request *models.GetMessageRequest) (models.MessageList, error) {
+func (b *BrokerGrpcServer) getEarliestMessages(request *models.GetMessageRequest) (models.MessageList, error) {
 	b.Mutex.Lock()
 	offset, exists := b.SubscriberOffsets[request.SubscriberId]
 	b.Mutex.Unlock()
@@ -115,7 +113,7 @@ func (b *RpcBroker) getEarliestMessages(request *models.GetMessageRequest) (mode
 	return messages, nil
 }
 
-func (b *RpcBroker) getLatestMessages(request *models.GetMessageRequest) (models.MessageList, error) {
+func (b *BrokerGrpcServer) getLatestMessages(request *models.GetMessageRequest) (models.MessageList, error) {
 	b.Mutex.Lock()
 	offset, exists := b.SubscriberOffsets[request.SubscriberId]
 	b.Mutex.Unlock()
@@ -152,7 +150,7 @@ func (b *RpcBroker) getLatestMessages(request *models.GetMessageRequest) (models
 	return messages, nil
 }
 
-func (b *RpcBroker) getMessages(request *models.GetMessageRequest, duration time.Duration) (models.MessageList, error) {
+func (b *BrokerGrpcServer) getMessages(request *models.GetMessageRequest, duration time.Duration) (models.MessageList, error) {
 	b.Mutex.Lock()
 	offset, exists := b.SubscriberOffsets[request.SubscriberId]
 	b.Mutex.Unlock()
@@ -196,12 +194,4 @@ func (b *RpcBroker) getMessages(request *models.GetMessageRequest, duration time
 	}
 
 	return messages, nil
-}
-
-func (s *RpcBroker) Register(service any) error {
-	if err := rpc.Register(service); err != nil {
-		return err
-	}
-
-	return nil
 }
