@@ -12,9 +12,10 @@ func main() {
 	pub := publisher.NewPublisher(&models.PublisherConfig{
 		Host:      envy.Get("HOST", ""),
 		Port:      envy.Get("PORT", ""),
-		Transport: models.DefaultTransport,
+		Transport: models.GrpcTransport,
 	})
 
+	//single pub message
 	if err := pub.PublishMessage("test", models.DefaultPartition, "Testing Data"); err != nil {
 		log.Fatalln("failed to publish message: ", err)
 	}

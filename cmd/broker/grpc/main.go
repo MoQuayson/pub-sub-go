@@ -4,17 +4,16 @@ import (
 	"github.com/MoQuayson/pub-sub-go/pkg/broker"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"github.com/gobuffalo/envy"
+	"log"
 )
 
 func main() {
-	b := broker.NewBroker(&models.BrokerConfig{
-		Host:      envy.Get("HOST", ""),
-		Port:      envy.Get("PORT", ""),
-		Transport: models.DefaultTransport,
+	grpcBroker := broker.NewBroker(&models.BrokerConfig{
+		Host:      envy.Get("HOST", "0.0.0.0"),
+		Port:      envy.Get("PORT", "50051"),
+		Transport: models.GrpcTransport,
 		Storage:   models.InMemoryStorageType,
 	})
 
-	//run server
-	b.Start()
-
+	log.Fatalln(grpcBroker.Start())
 }

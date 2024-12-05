@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package pubsubgo;
+option go_package = "github.com/moquayson/pub-sub-go;pb";
+
+service Broker {
+  // Publish a message to a specific topic and partition
+  rpc Publish (PublishRequest) returns (StringValue);
+
+  // Get messages for a specific topic and partition
+  rpc GetMessages (GetMessagesRequest) returns (MessageList);
+
+  // Stream messages for a specific topic and partition
+  rpc StreamMessages (GetMessagesRequest) returns (stream Message);
+}
+
+message PublishRequest {
+  string id = 1;
+  string topic = 2;
+  int32 partition = 3;
+  string data = 4;
+  string timestamp = 5;
+}
+
+message EmptyValue{}
+message StringValue{
+  string value = 1;
+}
+
+message PublishResponse {
+  string status = 1;
+}
+
+message GetMessagesRequest {
+  string subscriber_id = 1;
+  string topic = 2;
+  int32 partition = 3;
+  PublishTime publish_time = 4;
+}
+
+message Message {
+  string message_id = 1;
+  string topic = 2;
+  int32 partition = 3;
+  string data = 4;
+  int64 timestamp = 5; // Use UNIX timestamp for simplicity
+}
+
+message MessageList{
+  repeated Message messages = 1;
+}
+
+enum PublishTime{
+  Latest=0;
+  Earliest=-1;
+  Others=2;
+}
