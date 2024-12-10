@@ -17,8 +17,14 @@ func main() {
 	})
 
 	//multiple publishing
+	//for i := 1; i <= 9_000; i++ {
+	//	if err := pub.PublishMessage("test", models.DefaultPartition, fmt.Sprintf("Data %d", i)); err != nil {
+	//		log.Fatalln("failed to publish message: ", err)
+	//	}
+	//}
+
 	for i := 1; i <= 9_000; i++ {
-		if err := pub.PublishMessage("test", models.DefaultPartition, fmt.Sprintf("Data %d", i)); err != nil {
+		if err := pub.PublishMessage("test", models.DefaultPartition, fmt.Sprintf("Data %05d", i)); err != nil {
 			log.Fatalln("failed to publish message: ", err)
 		}
 	}

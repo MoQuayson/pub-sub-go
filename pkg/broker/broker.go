@@ -10,7 +10,6 @@ import (
 // Broker interface for all brokers created (rpc,grpc etc)
 type Broker interface {
 	Start() error
-	//Publish(msg *models.Message, reply *string) error
 	// PublishMessage pubishes a message to a topic
 	PublishMessage(msg *models.Message) error
 	GetMessages(request *models.GetMessageRequest) ([]*models.Message, error)

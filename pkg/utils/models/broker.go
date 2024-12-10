@@ -16,10 +16,11 @@ const (
 
 // BrokerConfig contains information for setting up a broker server
 type BrokerConfig struct {
-	Host      string
-	Port      string
-	Storage   StorageType
-	Transport Transport
+	Host            string
+	Port            string
+	Storage         StorageType
+	StorageLocation *string
+	Transport       Transport
 }
 
 func ConnectToRpcServer(host, port string) (*rpc.Client, error) {
