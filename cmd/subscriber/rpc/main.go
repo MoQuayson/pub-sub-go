@@ -26,14 +26,14 @@ func main() {
 
 	sub := subscriber.NewSubscriber(&models.SubscriberConfig{
 		Host:               envy.Get("HOST", ""),
-		Port:               "7654",
-		MessagePublishTime: models.WithinAnHourPublishTime,
+		Port:               "7000",
+		MessagePublishTime: models.EarliestPublishTime,
 		Partition:          models.DefaultPartition,
 		Transport:          models.DefaultTransport,
 		//SubscriberId:       &subId,
 	})
 	for {
-		messages, err := sub.Subscribe("ebbs_resync")
+		messages, err := sub.Subscribe("test")
 		if err != nil {
 			log.Fatalf("failed to subscribe message: %v\n", err)
 		}
