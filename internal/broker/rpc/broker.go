@@ -1,12 +1,13 @@
 package rpc
 
 import (
+	"context"
 	"encoding/gob"
 	"fmt"
 	"github.com/MoQuayson/pub-sub-go/internal/broker"
 	"github.com/MoQuayson/pub-sub-go/pkg/storage"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
-	"log"
+	"log/slog"
 	"net"
 	"net/rpc"
 	"sync"
@@ -23,31 +24,38 @@ type BrokerRpcServer struct {
 	SubscriberOffsets models.SubscriberOffsets
 	Mutex             sync.Mutex
 	Server            *Server
+	Logger            *slog.Logger
 }
 
-// Start  runs the broker server
-func (b *BrokerRpcServer) Start() error {
+// Start runs the broker server, stopping cleanly when ctx is cancelled.
+func (b *BrokerRpcServer) Start(ctx context.Context) error {
 	if err := b.Server.Register(); err != nil {
 		return err
 	}
-	//run on tcp
+
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", b.Config.Host, b.Config.Port))
 	if err != nil {
-		log.Println("failed to start broker:", err)
-		return err
+		return fmt.Errorf("broker: listen on %s:%s: %w", b.Config.Host, b.Config.Port, err)
 	}
 	defer listener.Close()
-	log.Printf("Broker is running on %s:%s", b.Config.Host, b.Config.Port)
 
+	go func() {
+		<-ctx.Done()
+		b.Logger.Info("broker shutting down")
+		listener.Close()
+	}()
+
+	b.Logger.Info("broker listening", "host", b.Config.Host, "port", b.Config.Port)
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("Connection error:", err)
-			return err
+			if ctx.Err() != nil {
+				return nil
+			}
+			return fmt.Errorf("broker: accept: %w", err)
 		}
 		go rpc.ServeConn(conn)
 	}
-
 }
 
 // PublishMessage publishes a message to a topic
@@ -55,7 +63,6 @@ func (b *BrokerRpcServer) PublishMessage(msg *models.Message) error {
 	b.Mutex.Lock()
 	defer b.Mutex.Unlock()
 
-	// Store the message
 	if err := b.Storage.StoreMessage(msg); err != nil {
 		return err
 	}
@@ -67,12 +74,5 @@ func (b *BrokerRpcServer) GetMessages(req *models.GetMessageRequest) ([]*models.
 	if err != nil {
 		return nil, err
 	}
-	switch req.PublishTime {
-	case models.LatestPublishTime:
-		return broker.GetLatestMessages(&b.Mutex, b.SubscriberOffsets, messages, req)
-	case models.EarliestPublishTime:
-		return broker.GetEarliestMessages(&b.Mutex, b.SubscriberOffsets, messages, req)
-	default:
-		return broker.GetMessages(&b.Mutex, b.SubscriberOffsets, messages, req, time.Duration(req.PublishTime))
-	}
+	return broker.ResolveMessages(&b.Mutex, b.SubscriberOffsets, messages, req)
 }

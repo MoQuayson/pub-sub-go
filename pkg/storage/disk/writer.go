@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-var (
-	fileNameFormat = ""
-)
-
 type LogWriter struct {
 	mu          sync.Mutex
 	basePath    string
@@ -24,12 +20,13 @@ type LogWriter struct {
 	currentDate string
 }
 
-func NewLogWriter(basePath string) *LogWriter {
-	//check if
-	utils.CreateDirectory(basePath)
+func NewLogWriter(basePath string) (*LogWriter, error) {
+	if err := utils.CreateDirectory(basePath); err != nil {
+		return nil, err
+	}
 	return &LogWriter{
 		basePath: basePath,
-	}
+	}, nil
 }
 
 func (lw *LogWriter) getLogFilePath() string {

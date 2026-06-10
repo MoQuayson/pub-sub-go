@@ -1,6 +1,7 @@
 package publisher
 
 import (
+	"context"
 	"fmt"
 	pubGrpc "github.com/MoQuayson/pub-sub-go/internal/publisher/grpc"
 	"github.com/MoQuayson/pub-sub-go/internal/publisher/rpc"
@@ -8,51 +9,55 @@ import (
 	"github.com/MoQuayson/pub-sub-go/pkg/utils"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"google.golang.org/grpc"
-	"log"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Publisher interface {
-	PublishMessage(topic string, partition models.Partition, data string) error
+	PublishMessage(ctx context.Context, topic string, partition models.Partition, data string) error
 }
 
-func NewPublisher(cfg *models.PublisherConfig) Publisher {
-
+func NewPublisher(cfg *models.PublisherConfig) (Publisher, error) {
 	if cfg == nil {
-		return nil
+		return nil, fmt.Errorf("publisher: config is required")
 	}
 
 	switch cfg.Transport {
+	case "", models.DefaultTransport:
+		return initRpcPublisher(cfg)
 	case models.GrpcTransport:
 		return initGrpcPublisher(cfg)
 	default:
-		return initRpcPublisher(cfg)
+		return nil, fmt.Errorf("publisher: unsupported transport %q", cfg.Transport)
 	}
 }
 
-func initRpcPublisher(cfg *models.PublisherConfig) Publisher {
-	pub := &rpc.PublisherRpcService{}
+func initRpcPublisher(cfg *models.PublisherConfig) (Publisher, error) {
 	client, err := models.ConnectToRpcServer(cfg.Host, cfg.Port)
-
 	if err != nil {
-		log.Fatalf("failed to create a publisher: %v\n", err)
-		return nil
+		return nil, fmt.Errorf("publisher: connect to rpc broker: %w", err)
 	}
-
-	pub.Client = client
-	return pub
+	return &rpc.PublisherRpcService{Client: client}, nil
 }
 
-func initGrpcPublisher(cfg *models.PublisherConfig) Publisher {
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), grpc.WithInsecure())
+func initGrpcPublisher(cfg *models.PublisherConfig) (Publisher, error) {
+	conn, err := grpc.NewClient(
+		fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
-		log.Fatalf("failed to connect to grpc broker: %v\n", err)
+		return nil, fmt.Errorf("publisher: connect to grpc broker: %w", err)
 	}
-	//defer conn.Close()
 
-	pub := &pubGrpc.PublisherGrpcService{}
-	pub.Client = pb.NewBrokerClient(conn)
-	pub.Id = utils.NewPublisherId()
-	pub.Config = cfg
+	pubId, err := utils.NewPublisherId()
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("publisher: generate id: %w", err)
+	}
 
-	return pub
+	return &pubGrpc.PublisherGrpcService{
+		Conn:   conn,
+		Client: pb.NewBrokerClient(conn),
+		Id:     pubId,
+		Config: cfg,
+	}, nil
 }

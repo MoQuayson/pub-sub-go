@@ -1,12 +1,12 @@
 # PubSubGo
 
 PubSubGo is a high-performance, scalable in-memory Pub/Sub (Publisher/Subscriber) messaging system implemented in Go.
-This package provides low-latency message broadcasting to multiple subscribers, with configurable message storage backends including in-memory cache, Redis, and disk storage.
+This package provides low-latency message broadcasting to multiple subscribers, with configurable message storage backends including in-memory cache and disk storage.
 
 ## Features
 
 - **In-Memory Pub/Sub**: Fast and lightweight for high-throughput messaging.
-- **Configurable Storage**: Choose between in-memory, Redis, or disk storage based on use case.
+- **Configurable Storage**: Choose between in-memory or disk storage based on use case.
 - **Scalable Architecture**: Designed to scale horizontally for distributed environments.
 - **Flexible Communication**: Expandable options beyond RPC for custom implementations.
 
@@ -112,8 +112,9 @@ func main() {
 
 ## Storage Options
 * InMemory: Fastest option, ideal for transient messaging.
-* Redis: Suitable for distributed setups where persistence and reliability are required.
 * Disk: Provides durability for long-term storage.
+
+Redis storage is declared in the model layer for future support, but it is not implemented yet.
 
 ## Publish Time Options
 * Earliest: retrieves messages from the dawn of time

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
-	"log"
+	"log/slog"
 	"os"
 	"sync"
 )
@@ -32,13 +32,14 @@ func (lr *LogReader) ReadMessages() ([]*models.Message, error) {
 	//read all files from directory
 	files, err := os.ReadDir(lr.basePath)
 	if err != nil {
-		log.Printf("failed to read messages from disk: %v\n", err)
+		slog.Error("failed to read messages from disk", "error", err)
 		return nil, err
 	}
 
 	for _, file := range files {
 		m, err := lr.getMessage(fmt.Sprintf("%s/%s", lr.basePath, file.Name()))
 		if err != nil {
+			slog.Warn("skipping unreadable log file", "file", file.Name(), "error", err)
 			continue
 		}
 

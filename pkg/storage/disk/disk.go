@@ -1,6 +1,7 @@
 package disk
 
 import (
+	"errors"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	linq "github.com/samber/lo"
 	"time"
@@ -34,6 +35,5 @@ func (d *DiskStorage) GetMessages(topic string, partition models.Partition) (mod
 }
 
 func (d *DiskStorage) EvictMessages(topic string, partition models.Partition, ttl time.Duration) error {
-	//TODO implement me
-	panic("implement me")
+	return errors.New("EvictMessages: not implemented for DiskStorage")
 }

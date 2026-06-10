@@ -3,15 +3,10 @@ package rpc
 import (
 	"fmt"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
-	"log"
+	"log/slog"
 	"net/rpc"
+	"strings"
 )
-
-//type Server interface {
-//	Register() error
-//	Publish(msg *models.Message, reply *string) error
-//	GetMessages(req *models.GetMessageRequest, reply *models.MessageList) error
-//}
 
 type Server struct {
 	broker *BrokerRpcServer
@@ -24,11 +19,12 @@ func NewRpcServer(br *BrokerRpcServer) *Server {
 }
 
 func (r *Server) Register() error {
-	if err := rpc.Register(r); err != nil {
-		return err
+	err := rpc.Register(r)
+	// net/rpc uses a global registry; ignore "already defined" when tests share a process.
+	if err != nil && strings.Contains(err.Error(), "already defined") {
+		return nil
 	}
-
-	return nil
+	return err
 }
 
 func (r *Server) Publish(msg *models.Message, reply *string) error {
@@ -41,10 +37,9 @@ func (r *Server) Publish(msg *models.Message, reply *string) error {
 }
 
 func (r *Server) GetMessages(req *models.GetMessageRequest, reply *models.MessageList) error {
-	//var err error
 	messages, err := r.broker.GetMessages(req)
 	if err != nil {
-		log.Printf("failed to get messages: %v\n", err)
+		slog.Error("failed to get messages", "error", err)
 		return err
 	}
 

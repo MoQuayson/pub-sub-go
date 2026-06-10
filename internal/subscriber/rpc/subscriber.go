@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"fmt"
+	"context"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/constants"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"net/rpc"
@@ -13,11 +13,13 @@ type SubscriberRpcService struct {
 	Config *models.SubscriberConfig
 }
 
-func (s *SubscriberRpcService) getMessages(topic string, partition models.Partition) (models.MessageList, error) {
+// Subscribe retrieves messages from the broker.
+// TODO: propagate ctx to RPC call when net/rpc supports it
+func (s *SubscriberRpcService) Subscribe(_ context.Context, topic string) ([]*models.Message, error) {
 	request := models.GetMessageRequest{
 		SubscriberId: s.Id,
 		Topic:        topic,
-		Partition:    partition,
+		Partition:    s.Config.Partition,
 		PublishTime:  s.Config.MessagePublishTime,
 	}
 
@@ -26,20 +28,5 @@ func (s *SubscriberRpcService) getMessages(topic string, partition models.Partit
 	if err != nil {
 		return nil, err
 	}
-
-	return messages, err
-}
-
-func (s *SubscriberRpcService) Subscribe(topic string) ([]*models.Message, error) {
-	return s.getMessages(topic, s.Config.Partition)
-}
-
-func connectToRpcServer(c *models.SubscriberConfig) (*rpc.Client, error) {
-	if c == nil {
-		*c = models.SubscriberConfig{
-			Host: constants.DefaultHost,
-			Port: constants.DefaultPort,
-		}
-	}
-	return rpc.Dial("tcp", fmt.Sprintf("%s:%s", c.Host, c.Port))
+	return messages, nil
 }

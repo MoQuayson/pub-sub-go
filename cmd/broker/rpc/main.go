@@ -1,24 +1,45 @@
 package main
 
 import (
+	"context"
 	"github.com/MoQuayson/pub-sub-go/pkg/broker"
-	"github.com/MoQuayson/pub-sub-go/pkg/utils"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"github.com/gobuffalo/envy"
-	"log"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	//b:= getBrokerWithInMemoryStorage()
-	b := getBrokerWithDiskStorage()
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
-	//run server
-	log.Fatalln(b.Start())
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
+	storageType := envy.Get("STORAGE", "InMemory")
+	var (
+		b   broker.Broker
+		err error
+	)
+	if storageType == "Disk" {
+		b, err = getBrokerWithDiskStorage()
+	} else {
+		b, err = getBrokerWithInMemoryStorage()
+	}
+	if err != nil {
+		slog.Error("failed to create broker", "error", err)
+		os.Exit(1)
+	}
+
+	if err := b.Start(ctx); err != nil {
+		slog.Error("broker stopped with error", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("broker stopped cleanly")
 }
 
-// in-memory broker example
-func getBrokerWithInMemoryStorage() broker.Broker {
+func getBrokerWithInMemoryStorage() (broker.Broker, error) {
 	return broker.NewBroker(&models.BrokerConfig{
 		Host:      envy.Get("HOST", "127.0.0.1"),
 		Port:      envy.Get("PORT", "7000"),
@@ -27,13 +48,13 @@ func getBrokerWithInMemoryStorage() broker.Broker {
 	})
 }
 
-// disk broker example
-func getBrokerWithDiskStorage() broker.Broker {
+func getBrokerWithDiskStorage() (broker.Broker, error) {
+	loc := envy.Get("DISK_STORAGE", "./bin/logs")
 	return broker.NewBroker(&models.BrokerConfig{
 		Host:            envy.Get("HOST", "127.0.0.1"),
 		Port:            envy.Get("PORT", "7000"),
 		Transport:       models.DefaultTransport,
 		Storage:         models.DiskStorageType,
-		StorageLocation: utils.ConvertToPointerString("./bin/logs"),
+		StorageLocation: &loc,
 	})
 }

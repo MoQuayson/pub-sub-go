@@ -1,46 +1,53 @@
 package main
 
 import (
+	"context"
 	"github.com/MoQuayson/pub-sub-go/pkg/subscriber"
+	"github.com/MoQuayson/pub-sub-go/pkg/utils/constants"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"github.com/gobuffalo/envy"
-	"log"
+	"io"
+	"log/slog"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
-	//sub := subscriber.NewSubscriber(&models.SubscriberConfig{
-	//	Host:               envy.Get("HOST", ""),
-	//	Port:               envy.Get("PORT", ""),
-	//	MessagePublishTime: enums.PublishTime_Latest,
-	//	Partition:          models.DefaultPartition,
-	//})
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo})))
 
-	//subId := "SUB1234"
-	//sub := subscriber.NewSubscriber(&models.SubscriberConfig{
-	//	Host:               envy.Get("HOST", ""),
-	//	Port:               envy.Get("PORT", ""),
-	//	MessagePublishTime: enums.PublishTime_Earliest,
-	//	Partition:          models.DefaultPartition,
-	//	SubscriberId:       &subId,
-	//})
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	sub := subscriber.NewSubscriber(&models.SubscriberConfig{
-		Host:               envy.Get("HOST", ""),
-		Port:               envy.Get("PORT", ""),
+	sub, err := subscriber.NewSubscriber(&models.SubscriberConfig{
+		Host:               envy.Get("HOST", constants.DefaultHost),
+		Port:               envy.Get("GRPC_PORT", "50051"),
 		MessagePublishTime: models.EarliestPublishTime,
 		Partition:          models.DefaultPartition,
 		Transport:          models.GrpcTransport,
-		//SubscriberId:       &subId,
 	})
-	for {
-		messages, err := sub.Subscribe("test")
-		if err != nil {
-			log.Fatalf("failed to subscribe message: %v\n", err)
-		}
-
-		for _, message := range messages {
-			log.Printf("Message (%s) with data:%v\n", message.Id, message.Data)
-		}
+	if err != nil {
+		slog.Error("failed to create subscriber", "error", err)
+		os.Exit(1)
+	}
+	if c, ok := sub.(io.Closer); ok {
+		defer c.Close()
 	}
 
+	for {
+		select {
+		case <-ctx.Done():
+			slog.Info("subscriber stopping")
+			return
+		default:
+		}
+		messages, err := sub.Subscribe(ctx, "test")
+		if err != nil {
+			slog.Error("failed to subscribe", "error", err)
+			os.Exit(1)
+		}
+		for _, message := range messages {
+			slog.Info("received message", "id", message.Id, "data", message.Data)
+		}
+	}
 }

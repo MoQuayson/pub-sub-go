@@ -4,7 +4,7 @@ package models
 type SubscriberConfig struct {
 	Host               string
 	Port               string
-	GroupId            string
+	GroupId            string // reserved for future consumer-group semantics
 	SubscriberId       *string
 	MessagePublishTime PublishTime
 	Partition          Partition

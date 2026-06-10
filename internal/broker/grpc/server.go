@@ -5,7 +5,8 @@ import (
 	"fmt"
 	pb "github.com/MoQuayson/pub-sub-go/pkg/proto_gen/github.com/moquayson/pub-sub-go"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
-	"log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -15,11 +16,11 @@ type Server struct {
 }
 
 func (b *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.StringValue, error) {
-
 	timestamp, err := time.Parse(time.DateTime, req.GetTimestamp())
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.InvalidArgument, "invalid timestamp %q: %v", req.GetTimestamp(), err)
 	}
+
 	msg := &models.Message{
 		Id:        req.GetId(),
 		Topic:     req.GetTopic(),
@@ -28,27 +29,26 @@ func (b *Server) Publish(ctx context.Context, req *pb.PublishRequest) (*pb.Strin
 		Timestamp: timestamp,
 	}
 	if err = b.broker.PublishMessage(msg); err != nil {
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "publish failed: %v", err)
 	}
 
 	return &pb.StringValue{Value: fmt.Sprintf("message (%s) published successfully", msg.Id)}, nil
 }
 
 func (b *Server) StreamMessages(req *pb.GetMessagesRequest, stream pb.Broker_StreamMessagesServer) error {
-	messages, err := b.GetMessages(context.Background(), req)
+	messages, err := b.GetMessages(stream.Context(), req)
 	if err != nil {
 		return err
 	}
 
 	for _, msg := range messages.Messages {
 		if err = stream.Send(msg); err != nil {
-			log.Printf("Error sending message to subscriber: %v", err)
-			break
+			return status.Errorf(codes.Internal, "stream send failed: %v", err)
 		}
 	}
-
 	return nil
 }
+
 func (b *Server) GetMessages(_ context.Context, req *pb.GetMessagesRequest) (*pb.MessageList, error) {
 	messages, err := b.broker.GetMessages(&models.GetMessageRequest{
 		SubscriberId: req.GetSubscriberId(),
@@ -56,14 +56,11 @@ func (b *Server) GetMessages(_ context.Context, req *pb.GetMessagesRequest) (*pb
 		Partition:    models.Partition(req.GetPartition()),
 		PublishTime:  models.PublishTime(req.GetPublishTime()),
 	})
-
 	if err != nil {
-		log.Printf("failed to get messages from broker: %v\n", err)
-		return nil, err
+		return nil, status.Errorf(codes.Internal, "get messages failed: %v", err)
 	}
 
-	pbMessages := make([]*pb.Message, 0)
-
+	pbMessages := make([]*pb.Message, 0, len(messages))
 	for _, message := range messages {
 		pbMessages = append(pbMessages, &pb.Message{
 			MessageId: message.Id,
@@ -74,5 +71,5 @@ func (b *Server) GetMessages(_ context.Context, req *pb.GetMessagesRequest) (*pb
 		})
 	}
 
-	return &pb.MessageList{Messages: pbMessages}, err
+	return &pb.MessageList{Messages: pbMessages}, nil
 }

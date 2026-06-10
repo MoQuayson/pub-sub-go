@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"fmt"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	linq "github.com/samber/lo"
 	"sort"
@@ -8,9 +9,25 @@ import (
 	"time"
 )
 
+func OffsetKey(request *models.GetMessageRequest) string {
+	return fmt.Sprintf("%s|%s|%d", request.SubscriberId, request.Topic, request.Partition)
+}
+
+func ResolveMessages(mutex *sync.Mutex, subscriberOffsets models.SubscriberOffsets, messages []*models.Message, request *models.GetMessageRequest) (models.MessageList, error) {
+	switch request.PublishTime {
+	case models.LatestPublishTime:
+		return GetLatestMessages(mutex, subscriberOffsets, messages, request)
+	case models.EarliestPublishTime:
+		return GetEarliestMessages(mutex, subscriberOffsets, messages, request)
+	default:
+		return GetMessages(mutex, subscriberOffsets, messages, request, time.Duration(request.PublishTime))
+	}
+}
+
 func GetEarliestMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.Offset, messages []*models.Message, request *models.GetMessageRequest) (models.MessageList, error) {
+	offsetKey := OffsetKey(request)
 	mutex.Lock()
-	offset, exists := subscriberOffsets[request.SubscriberId]
+	offset, exists := subscriberOffsets[offsetKey]
 	mutex.Unlock()
 
 	if exists {
@@ -33,7 +50,7 @@ func GetEarliestMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.
 	if len(messages) > 0 {
 		mutex.Lock()
 
-		subscriberOffsets[request.SubscriberId] = models.Offset{
+		subscriberOffsets[offsetKey] = models.Offset{
 			Topic:     request.Topic,
 			Partition: request.Partition,
 			Timestamp: messages[len(messages)-1].Timestamp,
@@ -47,8 +64,9 @@ func GetEarliestMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.
 }
 
 func GetLatestMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.Offset, messages []*models.Message, request *models.GetMessageRequest) (models.MessageList, error) {
+	offsetKey := OffsetKey(request)
 	mutex.Lock()
-	offset, exists := subscriberOffsets[request.SubscriberId]
+	offset, exists := subscriberOffsets[offsetKey]
 	mutex.Unlock()
 
 	if exists {
@@ -65,7 +83,7 @@ func GetLatestMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.Of
 	if len(messages) > 0 {
 		mutex.Lock()
 
-		subscriberOffsets[request.SubscriberId] = models.Offset{
+		subscriberOffsets[offsetKey] = models.Offset{
 			Topic:     request.Topic,
 			Partition: request.Partition,
 			Timestamp: messages[len(messages)-1].Timestamp,
@@ -79,8 +97,9 @@ func GetLatestMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.Of
 }
 
 func GetMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.Offset, messages []*models.Message, request *models.GetMessageRequest, duration time.Duration) (models.MessageList, error) {
+	offsetKey := OffsetKey(request)
 	mutex.Lock()
-	offset, exists := subscriberOffsets[request.SubscriberId]
+	offset, exists := subscriberOffsets[offsetKey]
 	mutex.Unlock()
 
 	if duration < 0 {
@@ -106,7 +125,7 @@ func GetMessages(mutex *sync.Mutex, subscriberOffsets map[string]models.Offset, 
 	if len(messages) > 0 {
 		mutex.Lock()
 
-		subscriberOffsets[request.SubscriberId] = models.Offset{
+		subscriberOffsets[offsetKey] = models.Offset{
 			Topic:     request.Topic,
 			Partition: request.Partition,
 			Timestamp: messages[len(messages)-1].Timestamp,

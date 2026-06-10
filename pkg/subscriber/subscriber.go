@@ -1,6 +1,7 @@
 package subscriber
 
 import (
+	"context"
 	"fmt"
 	subGrpc "github.com/MoQuayson/pub-sub-go/internal/subscriber/grpc"
 	"github.com/MoQuayson/pub-sub-go/internal/subscriber/rpc"
@@ -8,37 +9,39 @@ import (
 	"github.com/MoQuayson/pub-sub-go/pkg/utils"
 	"github.com/MoQuayson/pub-sub-go/pkg/utils/models"
 	"google.golang.org/grpc"
-	"log"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Subscriber interface {
-	Subscribe(topic string) ([]*models.Message, error)
+	Subscribe(ctx context.Context, topic string) ([]*models.Message, error)
 }
 
-func NewSubscriber(cfg *models.SubscriberConfig) Subscriber {
-
+func NewSubscriber(cfg *models.SubscriberConfig) (Subscriber, error) {
 	if cfg == nil {
-		return nil
+		return nil, fmt.Errorf("subscriber: config is required")
 	}
 
 	switch cfg.Transport {
+	case "", models.DefaultTransport:
+		return initRpcSubscriber(cfg)
 	case models.GrpcTransport:
 		return initGrpcSubscriber(cfg)
 	default:
-		return initRpcSubscriber(cfg)
+		return nil, fmt.Errorf("subscriber: unsupported transport %q", cfg.Transport)
 	}
 }
 
-func initRpcSubscriber(cfg *models.SubscriberConfig) Subscriber {
+func initRpcSubscriber(cfg *models.SubscriberConfig) (Subscriber, error) {
 	client, err := models.ConnectToRpcServer(cfg.Host, cfg.Port)
-
 	if err != nil {
-		log.Fatalf("failed to create subscriber: %v\n", err)
-		return nil
+		return nil, fmt.Errorf("subscriber: connect to rpc broker: %w", err)
 	}
 
-	subId := utils.NewSubscriberId()
-	if cfg != nil && cfg.SubscriberId != nil {
+	subId, err := utils.NewSubscriberId()
+	if err != nil {
+		return nil, fmt.Errorf("subscriber: generate id: %w", err)
+	}
+	if cfg.SubscriberId != nil {
 		subId = *cfg.SubscriberId
 	}
 
@@ -46,26 +49,31 @@ func initRpcSubscriber(cfg *models.SubscriberConfig) Subscriber {
 		Client: client,
 		Id:     subId,
 		Config: cfg,
-	}
+	}, nil
 }
 
-func initGrpcSubscriber(cfg *models.SubscriberConfig) Subscriber {
-
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", cfg.Host, cfg.Port), grpc.WithInsecure())
+func initGrpcSubscriber(cfg *models.SubscriberConfig) (Subscriber, error) {
+	conn, err := grpc.NewClient(
+		fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
-		log.Fatalf("failed to connect to grpc broker: %v\n", err)
+		return nil, fmt.Errorf("subscriber: connect to grpc broker: %w", err)
 	}
-	//defer conn.Close()
 
-	subId := utils.NewSubscriberId()
-	if cfg != nil && cfg.SubscriberId != nil {
+	subId, err := utils.NewSubscriberId()
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("subscriber: generate id: %w", err)
+	}
+	if cfg.SubscriberId != nil {
 		subId = *cfg.SubscriberId
 	}
 
-	sub := &subGrpc.SubscriberGrpcService{}
-	sub.Client = pb.NewBrokerClient(conn)
-	sub.Id = subId
-	sub.Config = cfg
-
-	return sub
+	return &subGrpc.SubscriberGrpcService{
+		Conn:   conn,
+		Client: pb.NewBrokerClient(conn),
+		Id:     subId,
+		Config: cfg,
+	}, nil
 }

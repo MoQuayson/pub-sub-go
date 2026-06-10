@@ -4,6 +4,6 @@ package models
 type PublisherConfig struct {
 	Host      string
 	Port      string
-	Partition Partition
+	Partition Partition // default partition when none is specified at call time
 	Transport Transport
 }
